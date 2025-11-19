@@ -73,12 +73,32 @@ create_plot_df <- function(fit_sarimax, fc, full_df) {
   )
 }
 
-plot_df_A <- create_plot_df(fit_sarimax, fc_A, full_df)
-plot_df_B <- create_plot_df(fit_sarimax, fc_B, full_df)
+plot_df_A <- create_plot_df(fit_sarimax, fc_A, full_df) %>%
+  mutate(forecast = ifelse(!is.na(observed), NA, forecast))
+plot_df_B <- create_plot_df(fit_sarimax, fc_B, full_df) %>%
+  mutate(forecast = ifelse(!is.na(observed), NA, forecast))
+
+#--------------------------------
+# Generate the notes
+#--------------------------------
+outbreak_start <- min(outbreak_dates)
+outbreak_end <- max(outbreak_dates)
+
+outbreak_note <- paste0(
+  "Note: The projected next outbreak period (",
+  format(outbreak_start, "%Y-%m"), " to ", format(outbreak_end, "%Y-%m"),
+  ") is inferred from the historical mean interval of 44 months between successive outbreaks."
+)
+
 
 # -------------------------------
 # 6. Plot Option A
 # -------------------------------
+
+# Explanation:
+# Option A — Mean
+# Uses one fixed exceedance value, calculated as the average of all past outbreak exceedances.
+
 plot_mean_historical_exceedance <- ggplot(plot_df_A, aes(x = date)) +
   geom_line(aes(y = observed), color = "black", size = 0.7) +
   geom_line(aes(y = forecast, color = "Forecast"), size = 1) +
@@ -91,11 +111,20 @@ plot_mean_historical_exceedance <- ggplot(plot_df_A, aes(x = date)) +
   labs(title = "SARIMAX Forecast (Option A: Mean Historical Exceedance)",
        y = "Cases", x = "Year") +
   scale_color_manual(values = c("Forecast" = "blue")) +
-  theme_minimal(base_size = 13)
+  theme_minimal(base_size = 13) +
+  labs(caption = outbreak_note) +
+  theme(plot.caption = element_text(hjust = 0, size = 10),
+        plot.margin = margin(b = 30))
+plot_mean_historical_exceedance
 
 # -------------------------------
 # 7. Plot Option B
 # -------------------------------
+
+# Explanation:
+# Option B — Sampling
+# Uses different exceedance values, each randomly drawn from the past outbreak exceedances.
+
 plot_sampled_historical_exceedance <- ggplot(plot_df_B, aes(x = date)) +
   geom_line(aes(y = observed), color = "black", size = 0.7) +
   geom_line(aes(y = forecast, color = "Forecast"), size = 1) +
@@ -108,8 +137,11 @@ plot_sampled_historical_exceedance <- ggplot(plot_df_B, aes(x = date)) +
   labs(title = "SARIMAX Forecast (Option B: Sampled Historical Exceedances)",
        y = "Cases", x = "Year") +
   scale_color_manual(values = c("Forecast" = "green")) +
-  theme_minimal(base_size = 13)
-
+  theme_minimal(base_size = 13) +
+  labs(caption = outbreak_note) +
+  theme(plot.caption = element_text(hjust = 0, size = 10),
+        plot.margin = margin(b = 30))
+plot_sampled_historical_exceedance
 
 
 # -------------------------------
@@ -139,23 +171,23 @@ plot_basic <- ggplot(plot_df, aes(x = date)) +
 
 
 
-# -------------------------------
-# 9. Make a function for the peaks
-# -------------------------------
-get_peak <- function(plot_df, outbreak_dates) {
-  future_part <- plot_df[plot_df$type == "Forecast" & plot_df$date %in% outbreak_dates, ]
-  peak_idx <- which.max(future_part$forecast)
-  peak_date <- future_part$date[peak_idx]
-  peak_value <- future_part$forecast[peak_idx]
-  cat("Predicted outbreak peak:", format(peak_date, "%Y-%m"), "\n")
-  cat("Predicted peak cases:", round(peak_value), "\n")
-}
-
-cat("Option A peak:\n")
-plot_mean_historical_exceedance <- get_peak(plot_df_A, outbreak_dates)
-
-cat("\nOption B peak:\n")
-plot_sampled_historical_exceedance <- get_peak(plot_df_B, outbreak_dates)
+# # -------------------------------
+# # 9. Make a function for the peaks
+# # -------------------------------
+# get_peak <- function(plot_df, outbreak_dates) {
+#   future_part <- plot_df[plot_df$type == "Forecast" & plot_df$date %in% outbreak_dates, ]
+#   peak_idx <- which.max(future_part$forecast)
+#   peak_date <- future_part$date[peak_idx]
+#   peak_value <- future_part$forecast[peak_idx]
+#   cat("Predicted outbreak peak:", format(peak_date, "%Y-%m"), "\n")
+#   cat("Predicted peak cases:", round(peak_value), "\n")
+# }
+# 
+# cat("Option A peak:\n")
+# plot_mean_historical_exceedance <- get_peak(plot_df_A, outbreak_dates)
+# 
+# cat("\nOption B peak:\n")
+# plot_sampled_historical_exceedance <- get_peak(plot_df_B, outbreak_dates)
 
 
 

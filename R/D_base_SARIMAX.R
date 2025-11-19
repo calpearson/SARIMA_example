@@ -51,7 +51,7 @@ plot_df <- full_df %>%
     type = ifelse(is.na(cases), "Forecast", "Observed")
   )
 
-ggplot(plot_df, aes(x = date)) +
+plot_base_sarimax <- ggplot(plot_df, aes(x = date)) +
   
   # Observed cases
   geom_line(aes(y = cases), colour = "black", linewidth = 0.7) +

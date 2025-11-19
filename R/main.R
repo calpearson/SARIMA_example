@@ -17,10 +17,14 @@ source("R/C_base_SARIMA.R")
 
 # 4. Generate your SARIMAX model (including the outbreak variable)
 source("R/D_base_SARIMAX.R")
+plot_base_sarimax
 
 # 5. Generate a baseline mean based off a lm of the case numbers where outbreak == 0
 source("R/E_generate_baseline_for_X.R")
 
 # 6. Generate SARIMAX using baseline trend (outbreak binary variable should be scaled to show by how much its above or below the baseline)
 source("R/F_SARIMAX_using_exceedance_update.R")
+plot_basic
+plot_mean_historical_exceedance
+plot_sampled_historical_exceedance
 
